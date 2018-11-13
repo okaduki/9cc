@@ -14,9 +14,25 @@ typedef struct {
     char* input;
 } Token;
 
+enum {
+    ND_NUM = 256,
+};
+
+typedef struct Node {
+    int type;
+    struct Node* lhs;
+    struct Node* rhs;
+    int val;
+} Node;
+
 Token tokens[100];
 void error(const Token* t){
     fprintf(stderr, "invalid character %s\n", t->input);
+
+    exit(1);
+}
+void error_s(const char* msg){
+    fprintf(stderr, "Error: %s\n", msg);
 
     exit(1);
 }
@@ -30,14 +46,6 @@ void tokenize(char* p){
             return;
         }
 
-        if(*p == '+' || *p == '-'){
-            tokens[i].type = *p;
-            tokens[i].input = p;
-            ++i;
-            ++p;
-            continue;
-        }
-
         if(isdigit(*p)){
             tokens[i].type = TK_NUM;
             tokens[i].input = p;
@@ -47,10 +55,129 @@ void tokenize(char* p){
             continue;
         }
 
-        Token token;
-        token.input = p;
-        error(&token);
+        {
+            tokens[i].type = *p;
+            tokens[i].input = p;
+            ++i;
+            ++p;
+            continue;
+        }
     }
+}
+
+
+Node* new_node(int op, Node* lhs, Node* rhs){
+    Node* node = malloc(sizeof(Node));
+    node->type = op;
+    node->lhs = lhs;
+    node->rhs = rhs;
+
+    return node;
+}
+Node* new_node_num(int val){
+    Node* node = malloc(sizeof(Node));
+    node->type = ND_NUM;
+    node->lhs = NULL;
+    node->rhs = NULL;
+    node->val = val;
+
+    return node;
+}
+
+int pos = 0;
+Node* expr();
+Node* mul();
+Node* term();
+
+Node* expr(){
+    Node* lhs = mul();
+    if(tokens[pos].type == TK_EOF){
+        return lhs;
+    }
+
+    if(tokens[pos].type == '+'){
+        pos++;
+        return new_node('+', lhs, expr());
+    }
+    else if(tokens[pos].type == '-'){
+        pos++;
+        return new_node('-', lhs, expr());
+    }
+
+    return lhs;
+}
+
+Node* mul(){
+    Node* lhs = term();
+    if(tokens[pos].type == TK_EOF){
+        return lhs;
+    }
+
+    if(tokens[pos].type == '*'){
+        pos++;
+        return new_node('*', lhs, mul());
+    }
+    else if(tokens[pos].type == '/'){
+        pos++;
+        return new_node('/', lhs, mul());
+    }
+
+    return lhs;
+}
+
+Node* term(){
+    if(tokens[pos].type == TK_NUM){
+        return new_node_num(tokens[pos++].val);
+    }
+
+    if(tokens[pos].type == '('){
+        pos++;
+        Node* node = expr();
+        if(tokens[pos].type != ')'){
+            fprintf(stderr, "Unmatched bracket\n");
+            error(&tokens[pos]);
+        }
+        ++pos;
+        return node;
+    }
+
+    error(&tokens[pos]);
+}
+
+void gen(Node* node){
+    if(node->type == ND_NUM){
+        printf("  push %d\n", node->val);
+        return;
+    }
+    if(!node->lhs || !node->rhs){
+        error_s("operand argument error");
+    }
+
+    gen(node->lhs);
+    gen(node->rhs);
+
+    printf("  pop rdi\n");
+    printf("  pop rax\n");
+
+    const char* op;
+    if(node->type == '+'){
+        printf("  %s rax, rdi\n", "add");
+    }
+    else if(node->type == '-'){
+        printf("  %s rax, rdi\n", "sub");
+    }
+    else if(node->type == '*'){
+        printf("  mul rdi\n");
+    }
+    else if(node->type == '/'){
+        printf("  mov rdx, 0\n");
+        printf("  div rdi\n");
+    }
+    else{
+        error_s("syntax error");
+    }
+
+    printf("  push rax\n");
 }
 
 int main(int argc, char **argv){
@@ -64,31 +191,10 @@ int main(int argc, char **argv){
     printf("main:\n");
 
     tokenize(argv[1]);
+    Node* node = expr();
+    gen(node);
 
-    if(tokens[0].type != TK_NUM){
-        error(&tokens[0]);
-    }
-
-    int i = 1;
-    printf("  mov rax, %d\n", tokens[0].val);
-    while(tokens[i].type != TK_EOF){
-        if(tokens[i].type == '+'){
-            if(tokens[i+1].type != TK_NUM)
-                error(&tokens[i+1]);
-            printf("  add rax, %d\n", tokens[i+1].val);
-            i += 2;
-        }
-        else if(tokens[i].type == '-'){
-            if(tokens[i+1].type != TK_NUM)
-                error(&tokens[i+1]);
-            printf("  sub rax, %d\n", tokens[i+1].val);
-            i += 2;
-        }
-        else{
-            error(&tokens[i]);
-        }
-    }
-
+    printf("  pop rax\n");
     printf("  ret\n");
 
     return 0;
