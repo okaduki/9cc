@@ -90,39 +90,45 @@ Node* mul();
 Node* term();
 
 Node* expr(){
-    Node* lhs = mul();
+    Node* res = mul();
     if(tokens[pos].type == TK_EOF){
-        return lhs;
+        return res;
     }
 
-    if(tokens[pos].type == '+'){
-        pos++;
-        return new_node('+', lhs, expr());
-    }
-    else if(tokens[pos].type == '-'){
-        pos++;
-        return new_node('-', lhs, expr());
+    while(1){
+        if(tokens[pos].type == '+'){
+            pos++;
+            res = new_node('+', res, mul());
+        }
+        else if(tokens[pos].type == '-'){
+            pos++;
+            res = new_node('-', res, mul());
+        }
+        else break;
     }
 
-    return lhs;
+    return res;
 }
 
 Node* mul(){
-    Node* lhs = term();
+    Node* res = term();
     if(tokens[pos].type == TK_EOF){
-        return lhs;
+        return res;
     }
 
-    if(tokens[pos].type == '*'){
-        pos++;
-        return new_node('*', lhs, mul());
-    }
-    else if(tokens[pos].type == '/'){
-        pos++;
-        return new_node('/', lhs, mul());
+    while(1){
+        if(tokens[pos].type == '*'){
+            pos++;
+            res = new_node('*', res, term());
+        }
+        else if(tokens[pos].type == '/'){
+            pos++;
+            res = new_node('/', res, term());
+        }
+        else break;
     }
 
-    return lhs;
+    return res;
 }
 
 Node* term(){
