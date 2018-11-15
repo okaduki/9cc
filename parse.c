@@ -45,6 +45,21 @@ void tokenize(char* p){
             continue;
         }
 
+        if(p[0] == '=' && p[1] == '='){
+            tokens[i].type = TK_EQ;
+            tokens[i].input = p;
+            ++i;
+            p += 2;
+            continue;
+        }
+        if(p[0] == '!' && p[1] == '='){
+            tokens[i].type = TK_NEQ;
+            tokens[i].input = p;
+            ++i;
+            p += 2;
+            continue;
+        }
+
         {
             tokens[i].type = *p;
             tokens[i].input = p;
@@ -55,7 +70,12 @@ void tokenize(char* p){
     }
 }
 
-
+void printTokens(){
+    for(int i=0;i<100;++i){
+        if(tokens[i].type == TK_EOF) return;
+        fprintf(stderr, "type = %c(%d)\n", tokens[i].type, tokens[i].type);
+    }
+}
 
 /**
  * parse functions
@@ -91,6 +111,7 @@ Node* new_node_ident(char name){
 void program();
 Node* assign();
 Node* assign_();
+Node* comp();
 Node* expr();
 Node* mul();
 Node* term();
@@ -105,7 +126,7 @@ void program(){
 }
 
 Node* assign(){
-    Node* res = expr();
+    Node* res = comp();
     if(tokens[pos].type == '='){
         ++pos;
         res = new_node('=', res, assign_());
@@ -121,7 +142,7 @@ Node* assign(){
 }
 
 Node* assign_(){
-    Node* res = expr();
+    Node* res = comp();
 
     if(tokens[pos].type != '='){
         return res;
@@ -129,6 +150,29 @@ Node* assign_(){
 
     ++pos;
     return new_node('=', res, assign_());
+}
+
+// compは左結合
+// 四則演算より結合が弱く、代入より強い
+Node* comp(){
+    Node* res = expr();
+    if(tokens[pos].type == TK_EOF){
+        return res;
+    }
+
+    while(1){
+        if(tokens[pos].type == TK_EQ){
+            pos++;
+            res = new_node(ND_EQ, res, expr());
+        }
+        else if(tokens[pos].type == TK_NEQ){
+            pos++;
+            res = new_node(ND_NEQ, res, expr());
+        }
+        else break;
+    }
+
+    return res;
 }
 
 Node* expr(){
@@ -184,7 +228,7 @@ Node* term(){
 
     if(tokens[pos].type == '('){
         pos++;
-        Node* node = expr();
+        Node* node = comp();
         if(tokens[pos].type != ')'){
             fprintf(stderr, "Unmatched bracket\n");
             error(&tokens[pos]);
@@ -194,5 +238,6 @@ Node* term(){
     }
 
     error(&tokens[pos]);
+    return NULL;
 }
 

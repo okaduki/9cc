@@ -9,6 +9,12 @@ try(){
     input="$2"
 
     ./9cc "$input" > tmp.s
+
+    if [[ $? != 0 ]]; then
+        echo "unsuccess compilation: $input"
+        exit 1
+    fi
+
     gcc -o tmp tmp.s
     ./tmp
     actual="$?"
@@ -36,5 +42,13 @@ try 3 "a=1;b=2;b=3;"
 try 3 "z=1;y=2;x=3;"
 try 100 "a=100;a;"
 try 0 "a=1;b=2;c=a+b;d=c-c;z=d;"
+try 1 "a=1; b=1; a = a == b; a;"
+try 0 "a=1; b=1; a = a != b; a;"
+try 1 "a=1; b=2; c = a != b; c;"
+try 1 "a = (2 + 3 == 5); a;"
+try 2 "a = (2 + (3 == 5)); a;"
+try 1 "a = 2 == 2; a;"
+try 1 "a = (2 == 2); a;"
+# try 1 "(a = 2) == 2; a;"
 
 echo "OK"

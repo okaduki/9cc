@@ -45,20 +45,31 @@ void gen(Node* node){
     printf("  pop rdi\n");
     printf("  pop rax\n");
 
-    if(node->type == '+'){
+    switch(node->type){
+    case '+':
         printf("  %s rax, rdi\n", "add");
-    }
-    else if(node->type == '-'){
+        break;
+    case '-':
         printf("  %s rax, rdi\n", "sub");
-    }
-    else if(node->type == '*'){
+        break;
+    case '*':
         printf("  mul rdi\n");
-    }
-    else if(node->type == '/'){
+        break;
+    case '/':
         printf("  mov rdx, 0\n");
         printf("  div rdi\n");
-    }
-    else{
+        break;
+    case ND_EQ:
+        printf("  cmp rax, rdi\n");
+        printf("  sete al\n");
+        printf("  movzb rax, al\n");
+        break;
+    case ND_NEQ:
+        printf("  cmp rax, rdi\n");
+        printf("  setne al\n");
+        printf("  movzb rax, al\n");
+        break;
+    default:
         error_s("syntax error");
     }
 
