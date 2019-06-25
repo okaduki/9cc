@@ -114,7 +114,14 @@ Node* assign_();
 Node* comp();
 Node* expr();
 Node* mul();
+Node* unary();
 Node* term();
+
+int consume(int ty){
+    if(tokens[pos].type != ty) return 0;
+    ++pos;
+    return 1;
+}
 
 void program(){
     Node* res = assign();
@@ -127,18 +134,18 @@ void program(){
 
 Node* assign(){
     Node* res = comp();
-    if(tokens[pos].type == '='){
-        ++pos;
+    if(consume('=')){
         res = new_node('=', res, assign_());
     }
 
-    if(tokens[pos].type != ';'){
-        fprintf(stderr, "; required.");
-        error(&tokens[pos]);
+    if(consume(';')){
+        return res;
     }
-    ++pos;
 
-    return res;
+    fprintf(stderr, "; required.");
+    error(&tokens[pos]);
+
+    return NULL;
 }
 
 Node* assign_(){
@@ -156,17 +163,15 @@ Node* assign_(){
 // 四則演算より結合が弱く、代入より強い
 Node* comp(){
     Node* res = expr();
-    if(tokens[pos].type == TK_EOF){
+    if(consume(TK_EOF)){
         return res;
     }
 
     while(1){
-        if(tokens[pos].type == TK_EQ){
-            pos++;
+        if(consume(TK_EQ)){
             res = new_node(ND_EQ, res, expr());
         }
-        else if(tokens[pos].type == TK_NEQ){
-            pos++;
+        else if(consume(TK_NEQ)){
             res = new_node(ND_NEQ, res, expr());
         }
         else break;
@@ -177,17 +182,15 @@ Node* comp(){
 
 Node* expr(){
     Node* res = mul();
-    if(tokens[pos].type == TK_EOF){
+    if(consume(TK_EOF)){
         return res;
     }
 
     while(1){
-        if(tokens[pos].type == '+'){
-            pos++;
+        if(consume('+')){
             res = new_node('+', res, mul());
         }
-        else if(tokens[pos].type == '-'){
-            pos++;
+        else if(consume('-')){
             res = new_node('-', res, mul());
         }
         else break;
@@ -197,24 +200,34 @@ Node* expr(){
 }
 
 Node* mul(){
-    Node* res = term();
-    if(tokens[pos].type == TK_EOF){
+    Node* res = unary();
+    if(consume(TK_EOF)){
         return res;
     }
 
     while(1){
-        if(tokens[pos].type == '*'){
-            pos++;
-            res = new_node('*', res, term());
+        if(consume('*')){
+            res = new_node('*', res, unary());
         }
-        else if(tokens[pos].type == '/'){
-            pos++;
-            res = new_node('/', res, term());
+        else if(consume('/')){
+            res = new_node('/', res, unary());
         }
         else break;
     }
 
     return res;
+}
+
+Node* unary(){
+    if(consume('+')){
+        return term();
+    }
+    else if(consume('-')){
+        Node* res = term();
+        return new_node('-', new_node_num(0), res);
+    }
+
+    return term();
 }
 
 Node* term(){
@@ -226,14 +239,12 @@ Node* term(){
         return new_node_ident(tokens[pos++].input[0]);
     }
 
-    if(tokens[pos].type == '('){
-        pos++;
+    if(consume('(')){
         Node* node = comp();
-        if(tokens[pos].type != ')'){
+        if(!consume(')')){
             fprintf(stderr, "Unmatched bracket\n");
             error(&tokens[pos]);
         }
-        ++pos;
         return node;
     }
 
