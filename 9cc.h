@@ -34,12 +34,22 @@ typedef struct Node {
     char name;
 } Node;
 
+typedef struct {
+    void **data;
+    int capacity;
+    int len;
+} Vector;
+
+Vector* new_vector();
+void vec_push(Vector* vec, void *data);
+
 void error(const Token* t);
 void error_s(const char* msg);
 
 
-extern Node* code[100];
+extern Vector* code;
 
+void alloc_workspaces();
 void tokenize(char* p);
 void program();
 

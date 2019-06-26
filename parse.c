@@ -7,77 +7,81 @@
 /**
  * global variables
  */
-Node* code[100];
+Vector *code = NULL;
 
 /**
  * static variables
  */
 int pos = 0;
-Token tokens[100];
-int npos = 0;
+Vector *tokens = NULL;
+
+
+/**
+ * init function
+ */
+void alloc_workspaces(){
+    code = new_vector();
+    tokens = new_vector();
+}
+
+void add_token(int type, int val, char *input){
+    Token *token = malloc(sizeof(Token));
+    token->type = type;
+    token->val = val;
+    token->input = input;
+
+    vec_push(tokens, token);
+}
+
+Token* get_token(int idx){
+    return (Token*)tokens->data[idx];
+}
 
 /**
  * Tokenize functions
  */
 void tokenize(char* p){
-    int i = 0;
     while(1){
         while(isspace(*p)) ++p;
         if(*p == '\0'){
-            tokens[i].type = TK_EOF;
+            add_token(TK_EOF, 0, NULL);
             return;
         }
 
         if(isdigit(*p)){
-            tokens[i].type = TK_NUM;
-            tokens[i].input = p;
-            tokens[i].val = strtol(p, &p, 10);
-
-            ++i;
+            add_token(TK_NUM, strtol(p, &p, 10), p);
             continue;
         }
 
         if('a' <= *p && *p <= 'z'){
-            tokens[i].type = TK_IDENT;
-            tokens[i].input = p;
-            ++i;
+            add_token(TK_IDENT, 0, p);
             ++p;
             continue;
         }
 
         if(p[0] == '=' && p[1] == '='){
-            tokens[i].type = TK_EQ;
-            tokens[i].input = p;
-            ++i;
+            add_token(TK_EQ, 0, p);
             p += 2;
             continue;
         }
         if(p[0] == '!' && p[1] == '='){
-            tokens[i].type = TK_NE;
-            tokens[i].input = p;
-            ++i;
+            add_token(TK_NE, 0, p);
             p += 2;
             continue;
         }
         if(p[0] == '<' && p[1] == '='){
-            tokens[i].type = TK_LE;
-            tokens[i].input = p;
-            ++i;
+            add_token(TK_LE, 0, p);
             p += 2;
             continue;
         }
         if(p[0] == '>' && p[1] == '='){
-            tokens[i].type = TK_GE;
-            tokens[i].input = p;
-            ++i;
+            add_token(TK_GE, 0, p);
             p += 2;
             continue;
         }
 
         {
-            tokens[i].type = *p;
-            tokens[i].input = p;
-            ++i;
+            add_token(*p, 0, p);
             ++p;
             continue;
         }
@@ -86,8 +90,9 @@ void tokenize(char* p){
 
 void printTokens(){
     for(int i=0;i<100;++i){
-        if(tokens[i].type == TK_EOF) return;
-        fprintf(stderr, "type = %c(%d)\n", tokens[i].type, tokens[i].type);
+        Token *token = get_token(i);
+        if(token->type == TK_EOF) return;
+        fprintf(stderr, "type = %c(%d)\n", token->type, token->type);
     }
 }
 
@@ -134,15 +139,15 @@ Node* unary();
 Node* term();
 
 int consume(int ty){
-    if(tokens[pos].type != ty) return 0;
+    if(get_token(pos)->type != ty) return 0;
     ++pos;
     return 1;
 }
 
 void program(){
     Node* res = assign();
-    code[npos++] = res;
-    if(tokens[pos].type == TK_EOF){
+    vec_push(code, res);
+    if(get_token(pos)->type == TK_EOF){
         return;
     }
     program();
@@ -159,7 +164,7 @@ Node* assign(){
     }
 
     fprintf(stderr, "; required.");
-    error(&tokens[pos]);
+    error(get_token(pos));
 
     return NULL;
 }
@@ -167,7 +172,7 @@ Node* assign(){
 Node* assign_(){
     Node* res = expr();
 
-    if(tokens[pos].type != '='){
+    if(get_token(pos)->type != '='){
         return res;
     }
 
@@ -276,24 +281,24 @@ Node* unary(){
 }
 
 Node* term(){
-    if(tokens[pos].type == TK_NUM){
-        return new_node_num(tokens[pos++].val);
+    if(get_token(pos)->type == TK_NUM){
+        return new_node_num(get_token(pos++)->val);
     }
 
-    if(tokens[pos].type == TK_IDENT){
-        return new_node_ident(tokens[pos++].input[0]);
+    if(get_token(pos)->type == TK_IDENT){
+        return new_node_ident(get_token(pos++)->input[0]);
     }
 
     if(consume('(')){
         Node* node = expr();
         if(!consume(')')){
             fprintf(stderr, "Unmatched bracket\n");
-            error(&tokens[pos]);
+            error(get_token(pos));
         }
         return node;
     }
 
-    error(&tokens[pos]);
+    error(get_token(pos));
     return NULL;
 }
 
