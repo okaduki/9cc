@@ -53,7 +53,21 @@ void tokenize(char* p){
             continue;
         }
         if(p[0] == '!' && p[1] == '='){
-            tokens[i].type = TK_NEQ;
+            tokens[i].type = TK_NE;
+            tokens[i].input = p;
+            ++i;
+            p += 2;
+            continue;
+        }
+        if(p[0] == '<' && p[1] == '='){
+            tokens[i].type = TK_LE;
+            tokens[i].input = p;
+            ++i;
+            p += 2;
+            continue;
+        }
+        if(p[0] == '>' && p[1] == '='){
+            tokens[i].type = TK_GE;
             tokens[i].input = p;
             ++i;
             p += 2;
@@ -111,8 +125,10 @@ Node* new_node_ident(char name){
 void program();
 Node* assign();
 Node* assign_();
-Node* comp();
 Node* expr();
+Node* equality();
+Node* relational();
+Node* add();
 Node* mul();
 Node* unary();
 Node* term();
@@ -133,7 +149,7 @@ void program(){
 }
 
 Node* assign(){
-    Node* res = comp();
+    Node* res = expr();
     if(consume('=')){
         res = new_node('=', res, assign_());
     }
@@ -149,7 +165,7 @@ Node* assign(){
 }
 
 Node* assign_(){
-    Node* res = comp();
+    Node* res = expr();
 
     if(tokens[pos].type != '='){
         return res;
@@ -159,20 +175,24 @@ Node* assign_(){
     return new_node('=', res, assign_());
 }
 
+Node* expr(){
+    return equality();
+}
+
 // compは左結合
 // 四則演算より結合が弱く、代入より強い
-Node* comp(){
-    Node* res = expr();
+Node* equality(){
+    Node* res = relational();
     if(consume(TK_EOF)){
         return res;
     }
 
     while(1){
         if(consume(TK_EQ)){
-            res = new_node(ND_EQ, res, expr());
+            res = new_node(ND_EQ, res, relational());
         }
-        else if(consume(TK_NEQ)){
-            res = new_node(ND_NEQ, res, expr());
+        else if(consume(TK_NE)){
+            res = new_node(ND_NE, res, relational());
         }
         else break;
     }
@@ -180,7 +200,32 @@ Node* comp(){
     return res;
 }
 
-Node* expr(){
+Node* relational(){
+    Node* res = add();
+    if(consume(TK_EOF)){
+        return res;
+    }
+
+    while(1){
+        if(consume(TK_LE)){
+            res = new_node(ND_LE, res, add());
+        }
+        else if(consume(TK_GE)){
+            res = new_node(ND_LE, add(), res);
+        }
+        else if(consume('<')){
+            res = new_node(ND_LT, res, add());
+        }
+        else if(consume('>')){
+            res = new_node(ND_LT, add(), res);
+        }
+        else break;
+    }
+
+    return res;
+}
+
+Node* add(){
     Node* res = mul();
     if(consume(TK_EOF)){
         return res;
@@ -240,7 +285,7 @@ Node* term(){
     }
 
     if(consume('(')){
-        Node* node = comp();
+        Node* node = expr();
         if(!consume(')')){
             fprintf(stderr, "Unmatched bracket\n");
             error(&tokens[pos]);
