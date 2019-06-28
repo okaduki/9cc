@@ -89,6 +89,17 @@ try 0 "1 != 0 <= 1;"
 # test long statement
 try 4 "a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=2;a=a+a;a;"
 
+# simple stetement
+try 14 "a = 3; b = 5 * 6 - 8; a + b / 2;"
+try 9 "b = a = 3; a * b;"
+
+# long varname
+try 6 \
+" foo = 1; \
+  bar = 2 + 3;\
+  foo + bar;"
+try 10 "n1 = 1; n2 = 2; n3 = 3; n4 = 4; n1+n2+n3+n4;"
+
 # try 1 "(a = 2) == 2; a;"
 
 echo "OK"

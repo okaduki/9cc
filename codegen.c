@@ -3,12 +3,12 @@
 
 
 void gen_lval(Node* node){
-    if(node->type != ND_IDENT){
+    if(node->type != ND_LVAR){
         error_s("rvalue cannot be assigned.");
     }
 
     printf("  mov rax, rbp\n");
-    printf("  sub rax, %d\n", (node->name - 'a' + 1) * 8);
+    printf("  sub rax, %d\n", node->offset);
     printf("  push rax\n");
 }
 
@@ -17,7 +17,7 @@ void gen(Node* node){
         printf("  push %d\n", node->val);
         return;
     }
-    if(node->type == ND_IDENT){
+    if(node->type == ND_LVAR){
         gen_lval(node);
         printf("  pop rax\n");
         printf("  mov rax, [rax]\n");
@@ -25,7 +25,7 @@ void gen(Node* node){
         return;
     }
     
-    if(node->type == '='){
+    if(node->type == ND_ASSIGN){
         gen_lval(node->lhs);
         gen(node->rhs);
         printf("  pop rdi\n");

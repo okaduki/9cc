@@ -8,6 +8,7 @@
  * global variables
  */
 Vector *code = NULL;
+LVar *locals = NULL;
 
 /**
  * static variables
@@ -24,11 +25,12 @@ void alloc_workspaces(){
     tokens = new_vector();
 }
 
-void add_token(int type, int val, char *input){
+void add_token(int type, int val, char *input, int len){
     Token *token = malloc(sizeof(Token));
     token->type = type;
     token->val = val;
     token->input = input;
+    token->len = len;
 
     vec_push(tokens, token);
 }
@@ -44,44 +46,50 @@ void tokenize(char* p){
     while(1){
         while(isspace(*p)) ++p;
         if(*p == '\0'){
-            add_token(TK_EOF, 0, NULL);
+            add_token(TK_EOF, 0, NULL, 1);
             return;
         }
 
         if(isdigit(*p)){
-            add_token(TK_NUM, strtol(p, &p, 10), p);
+            add_token(TK_NUM, strtol(p, &p, 10), p, 1);
             continue;
         }
 
-        if('a' <= *p && *p <= 'z'){
-            add_token(TK_IDENT, 0, p);
-            ++p;
+
+        if(isalpha(*p)){
+            char *q = p;
+            int len = 0;
+            while(p != NULL && isalnum(*p)){
+                ++len;
+                ++p;
+            }
+            add_token(TK_IDENT, 0, q, len);
             continue;
         }
 
         if(p[0] == '=' && p[1] == '='){
-            add_token(TK_EQ, 0, p);
+            add_token(TK_EQ, 0, p, 2);
             p += 2;
             continue;
         }
         if(p[0] == '!' && p[1] == '='){
-            add_token(TK_NE, 0, p);
+            add_token(TK_NE, 0, p, 2);
             p += 2;
             continue;
         }
         if(p[0] == '<' && p[1] == '='){
-            add_token(TK_LE, 0, p);
+            add_token(TK_LE, 0, p, 2);
             p += 2;
             continue;
         }
         if(p[0] == '>' && p[1] == '='){
-            add_token(TK_GE, 0, p);
+            add_token(TK_GE, 0, p, 2);
             p += 2;
             continue;
         }
 
         {
-            add_token(*p, 0, p);
+            add_token(*p, 0, p, 1);
             ++p;
             continue;
         }
@@ -116,21 +124,31 @@ Node* new_node_num(int val){
 
     return node;
 }
-Node* new_node_ident(char name){
+Node* new_node_ident(int offset){
     Node* node = malloc(sizeof(Node));
-    node->type = ND_IDENT;
+    node->type = ND_LVAR;
     node->lhs = NULL;
     node->rhs = NULL;
-    node->name = name;
+    node->offset = offset;
 
     return node;
 }
 
+LVar *find_lvar(Token *tok){
+    for(LVar *crt = locals; crt != NULL; crt = crt->next){
+        if(crt->len == tok->len && memcmp(crt->name, tok->input, crt->len) == 0){
+            return crt;
+        }
+    }
+    return NULL;
+}
+
 
 void program();
+Node* stmt();
+Node* expr();
 Node* assign();
 Node* assign_();
-Node* expr();
 Node* equality();
 Node* relational();
 Node* add();
@@ -139,13 +157,13 @@ Node* unary();
 Node* term();
 
 int consume(int ty){
-    if(get_token(pos)->type != ty) return 0;
+    if(pos >= tokens->len || get_token(pos)->type != ty) return 0;
     ++pos;
     return 1;
 }
 
 void program(){
-    Node* res = assign();
+    Node* res = stmt();
     vec_push(code, res);
     if(get_token(pos)->type == TK_EOF){
         return;
@@ -153,11 +171,8 @@ void program(){
     program();
 }
 
-Node* assign(){
+Node* stmt(){
     Node* res = expr();
-    if(consume('=')){
-        res = new_node('=', res, assign_());
-    }
 
     if(consume(';')){
         return res;
@@ -169,23 +184,20 @@ Node* assign(){
     return NULL;
 }
 
-Node* assign_(){
-    Node* res = expr();
-
-    if(get_token(pos)->type != '='){
-        return res;
-    }
-
-    ++pos;
-    return new_node('=', res, assign_());
-}
 
 Node* expr(){
-    return equality();
+    return assign();
 }
 
-// compは左結合
-// 四則演算より結合が弱く、代入より強い
+Node* assign(){
+    Node* res = equality();
+    if(consume('=')){
+        res = new_node(ND_ASSIGN, res, assign());
+    }
+
+    return res;
+}
+
 Node* equality(){
     Node* res = relational();
     if(consume(TK_EOF)){
@@ -286,7 +298,18 @@ Node* term(){
     }
 
     if(get_token(pos)->type == TK_IDENT){
-        return new_node_ident(get_token(pos++)->input[0]);
+        Token *tok = get_token(pos++);
+        LVar *var = find_lvar(tok);
+        if(var == NULL){
+            var = malloc(sizeof(LVar));
+            var->next = locals;
+            var->name = tok->input;
+            var->len = tok->len;
+            var->offset = (locals == NULL ? 0 : locals->offset) + 8;
+
+            locals = var;
+        }
+        return new_node_ident(var->offset);
     }
 
     if(consume('(')){
