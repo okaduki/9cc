@@ -27,6 +27,18 @@ try(){
     set -e
 }
 
+# if statement
+
+try 1 "x = 9; if ( x == 9 ) return 1; return 0;"
+try 2 "x = 11; if ( x == 9 ) return 1; return 2;"
+try 2 "x = 11; if ( x == 9 ) return 1; else return 2; return 3;"
+try 1 "x = 10; if ( x == 10 ) return 1; else if(x == 11) return 2; else return 3; return 4;"
+try 2 "x = 11; if ( x == 10 ) return 1; else if(x == 11) return 2; else return 3; return 4;"
+try 3 "x = 12; if ( x == 10 ) return 1; else if(x == 11) return 2; else return 3; return 4;"
+try 3 "x = 13; if ( x == 10 ) return 1; else if(x == 11) return 2; else return 3; return 4;"
+
+# math expression
+
 try 0 "0;"
 try 42 "42;"
 try 42 "21+23-2;"
@@ -103,5 +115,6 @@ try 10 "n1 = 1; n2 = 2; n3 = 3; n4 = 4; n1+n2+n3+n4;"
 # return
 try 14 "a = 3; b = 5 * 6 - 8; return a + b / 2;"
 try 5 "return 5; return 8;"
+
 
 echo "OK"

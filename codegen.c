@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "9cc.h"
 
+static int label_counter = 0;
 
 void gen_lval(Node* node){
     if(node->type != ND_LVAR){
@@ -31,6 +32,40 @@ void gen(Node* node){
         printf("  mov rsp, rbp \n");
         printf("  pop rbp \n");
         printf("  ret\n");
+        return;
+    }
+
+    if(node->type == ND_IF_COND){
+        if(node->rhs->type != ND_IF_STM){
+            error_s("no statements in if");
+        }
+        gen(node->lhs);
+
+        int fi_label = label_counter++;
+        if(node->rhs->rhs){ // exist else-statement
+            int false_label = label_counter++;
+
+            printf("  pop rax \n");
+            printf("  cmp rax, 0 \n");
+            printf("  je .L%d \n", false_label);
+
+            // true
+            gen(node->rhs->lhs);
+            printf("  jmp .L%d \n", fi_label);
+            // false
+            printf(".L%d: \n", false_label);
+            gen(node->rhs->rhs);
+            // end
+            printf(".L%d: \n", fi_label);
+        }
+        else{
+            printf("  pop rax \n");
+            printf("  cmp rax, 0 \n");
+            printf("  je .L%d \n", fi_label);
+            gen(node->rhs->lhs);
+
+            printf(".L%d: \n", fi_label);
+        }
         return;
     }
 

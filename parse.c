@@ -64,8 +64,16 @@ void tokenize(char* p){
                 ++p;
             }
 
-            if(len == 6 && strncmp(q, "return", 6) == 0){
+            if(len == 6 && strncmp(q, "return", len) == 0){
                 add_token(TK_RETURN, 0, q, len);
+                continue;
+            }
+            if(len == 2 && strncmp(q, "if", len) == 0){
+                add_token(TK_IF, 0, q, len);
+                continue;
+            }
+            if(len == 4 && strncmp(q, "else", len) == 0){
+                add_token(TK_ELSE, 0, q, len);
                 continue;
             }
 
@@ -184,6 +192,27 @@ Node* stmt(){
         if(consume(';')){
             return new_node(ND_RETURN, res, NULL);
         }
+    }
+    else if(consume(TK_IF)){
+        if(!consume('(')){
+            fprintf(stderr, "( required.");
+            error(get_token(pos));
+        }
+        Node* cond = expr();
+        
+        if(!consume(')')){
+            fprintf(stderr, ") required.");
+            error(get_token(pos));
+        }
+
+        Node* stm1 = stmt();
+        Node* stm2 = NULL;
+
+        if(consume(TK_ELSE)){
+            stm2 = stmt();
+        }
+
+        return new_node(ND_IF_COND, cond, new_node(ND_IF_STM, stm1, stm2));
     }
     else{
         res = expr();
