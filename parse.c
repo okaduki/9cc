@@ -76,6 +76,10 @@ void tokenize(char* p){
                 add_token(TK_ELSE, 0, q, len);
                 continue;
             }
+            if(len == 5 && strncmp(q, "while", len) == 0){
+                add_token(TK_WHILE, 0, q, len);
+                continue;
+            }
 
             add_token(TK_IDENT, 0, q, len);
             continue;
@@ -213,6 +217,21 @@ Node* stmt(){
         }
 
         return new_node(ND_IF_COND, cond, new_node(ND_IF_STM, stm1, stm2));
+    }
+    else if(consume(TK_WHILE)){
+        if(!consume('(')){
+            fprintf(stderr, "( required.");
+            error(get_token(pos));
+        }
+        Node* cond = expr();
+        
+        if(!consume(')')){
+            fprintf(stderr, ") required.");
+            error(get_token(pos));
+        }
+
+        Node* stm = stmt();
+        return new_node(ND_WHILE, cond, stm);
     }
     else{
         res = expr();

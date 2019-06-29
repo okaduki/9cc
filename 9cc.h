@@ -1,6 +1,24 @@
 #ifndef __9CC_H__
 #define __9CC_H__
 
+/*
+
+program    = stmt*
+stmt    = expr ";"
+        | "if" "(" expr ")" stmt ("else" stmt)?
+        | "while" "(" expr ")" stmt
+        | "for" "(" expr? ";" expr? ";" expr? ")" stmt
+        | "return" expr ";"
+expr       = assign
+assign     = equality ("=" assign)?
+equality   = relational ("==" relational | "!=" relational)*
+relational = add ("<" add | "<=" add | ">" add | ">=" add)*
+add        = mul ("+" mul | "-" mul)*
+mul        = unary ("*" unary | "/" unary)*
+unary      = ("+" | "-")? term
+term       = num | ident | "(" expr ")"
+
+ */
 enum {
     TK_NUM = 256,
     TK_IDENT,
@@ -11,6 +29,7 @@ enum {
     TK_RETURN,
     TK_IF,
     TK_ELSE,
+    TK_WHILE,
     TK_EOF,
 };
 
@@ -39,6 +58,7 @@ enum {
     ND_RETURN,
     ND_IF_COND,
     ND_IF_STM,
+    ND_WHILE,
 };
 
 typedef struct Node {

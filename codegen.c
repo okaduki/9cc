@@ -68,6 +68,24 @@ void gen(Node* node){
         }
         return;
     }
+    if(node->type == ND_WHILE){
+        int begin_label = label_counter++;
+        int end_label = label_counter++;
+
+        printf(".L%d: \n", begin_label);
+        // cond
+        gen(node->lhs);
+        printf("  pop rax \n");
+        printf("  cmp rax, 0 \n");
+        printf("  je .L%d \n", end_label);
+        // stmt
+        gen(node->rhs);
+        printf("  jmp .L%d \n", begin_label);
+        // end
+        printf(".L%d: \n", end_label);
+
+        return;
+    }
 
     if(node->type == ND_ASSIGN){
         gen_lval(node->lhs);

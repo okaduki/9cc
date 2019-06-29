@@ -37,6 +37,10 @@ try 2 "x = 11; if ( x == 10 ) return 1; else if(x == 11) return 2; else return 3
 try 3 "x = 12; if ( x == 10 ) return 1; else if(x == 11) return 2; else return 3; return 4;"
 try 3 "x = 13; if ( x == 10 ) return 1; else if(x == 11) return 2; else return 3; return 4;"
 
+# while statement
+
+try 11 "i = 0; while ( i <= 10 ) i = i + 1; return i;"
+
 # math expression
 
 try 0 "0;"
