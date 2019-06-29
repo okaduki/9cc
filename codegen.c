@@ -14,6 +14,8 @@ void gen_lval(Node* node){
 }
 
 void gen(Node* node){
+    if(!node || node->type == ND_EMPTY) return;
+
     if(node->type == ND_NUM){
         printf("  push %d\n", node->val);
         return;
@@ -38,6 +40,7 @@ void gen(Node* node){
     if(node->type == ND_IF_COND){
         if(node->rhs->type != ND_IF_STM){
             error_s("no statements in if");
+            return;
         }
         gen(node->lhs);
 
@@ -80,6 +83,38 @@ void gen(Node* node){
         printf("  je .L%d \n", end_label);
         // stmt
         gen(node->rhs);
+        printf("  jmp .L%d \n", begin_label);
+        // end
+        printf(".L%d: \n", end_label);
+
+        return;
+    }
+    if(node->type == ND_FOR){
+        if(!node->lhs || node->lhs->type != ND_FOR
+         || !node->rhs || node->rhs->type != ND_FOR){
+            error_s("invalid syntax in for-expression");
+            return;
+        }
+
+        Node* init = node->lhs->lhs;
+        Node* cond = node->lhs->rhs;
+        Node* incr = node->rhs->lhs;
+        Node* stm  = node->rhs->rhs;
+
+        int begin_label = label_counter++;
+        int end_label = label_counter++;
+
+        gen(init);
+        printf(".L%d: \n", begin_label);
+        // cond
+        gen(cond);
+        printf("  pop rax \n");
+        printf("  cmp rax, 0 \n");
+        printf("  je .L%d \n", end_label);
+        // stmt
+        gen(stm);
+        // incr
+        gen(incr);
         printf("  jmp .L%d \n", begin_label);
         // end
         printf(".L%d: \n", end_label);

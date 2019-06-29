@@ -80,6 +80,10 @@ void tokenize(char* p){
                 add_token(TK_WHILE, 0, q, len);
                 continue;
             }
+            if(len == 3 && strncmp(q, "for", len) == 0){
+                add_token(TK_FOR, 0, q, len);
+                continue;
+            }
 
             add_token(TK_IDENT, 0, q, len);
             continue;
@@ -191,6 +195,8 @@ void program(){
 
 Node* stmt(){
     Node *res = NULL;
+    if(consume(';')) return new_node(ND_EMPTY, NULL, NULL);
+    
     if(consume(TK_RETURN)){
         res = expr();
         if(consume(';')){
@@ -232,6 +238,42 @@ Node* stmt(){
 
         Node* stm = stmt();
         return new_node(ND_WHILE, cond, stm);
+    }
+    else if(consume(TK_FOR)){
+        if(!consume('(')){
+            fprintf(stderr, "( required.");
+            error(get_token(pos));
+        }
+
+        Node *init = NULL;
+        Node *cond = NULL;
+        Node *incr = NULL;
+
+        if(!consume(';')){
+            init = expr();
+            if(!consume(';')){
+                fprintf(stderr, "missing 1st ; in for-expression.");
+                error(get_token(pos));
+            }
+        }
+        if(!consume(';')){
+            cond = expr();
+            if(!consume(';')){
+                fprintf(stderr, "missing 2nd ; in for-expression.");
+                error(get_token(pos));
+            }
+        }
+        if(!consume(')')){
+            incr = expr();
+            if(!consume(')')){
+                fprintf(stderr, ") required.");
+                error(get_token(pos));
+            }
+        }
+
+        Node* stm = stmt();
+
+        return new_node(ND_FOR, new_node(ND_FOR, init, cond), new_node(ND_FOR, incr, stm));
     }
     else{
         res = expr();

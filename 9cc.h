@@ -4,7 +4,9 @@
 /*
 
 program    = stmt*
-stmt    = expr ";"
+stmt    =
+        | ";"
+        | expr ";"
         | "if" "(" expr ")" stmt ("else" stmt)?
         | "while" "(" expr ")" stmt
         | "for" "(" expr? ";" expr? ";" expr? ")" stmt
@@ -30,6 +32,7 @@ enum {
     TK_IF,
     TK_ELSE,
     TK_WHILE,
+    TK_FOR,
     TK_EOF,
 };
 
@@ -59,6 +62,8 @@ enum {
     ND_IF_COND,
     ND_IF_STM,
     ND_WHILE,
+    ND_FOR,
+    ND_EMPTY,
 };
 
 typedef struct Node {

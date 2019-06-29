@@ -41,6 +41,12 @@ try 3 "x = 13; if ( x == 10 ) return 1; else if(x == 11) return 2; else return 3
 
 try 11 "i = 0; while ( i <= 10 ) i = i + 1; return i;"
 
+# for statement
+
+try 55 "sum = 0; i = 114; for( i = 0; i <= 10; i = i+1) sum = sum + i; return sum;"
+try 11 "sum = 0; i = 0; for(; i <= 10; i = i + 1) 0; return i;"
+try 11 "sum = 0; i = 0; for(; i <= 10; i = i + 1) ; return i;"
+
 # math expression
 
 try 0 "0;"
