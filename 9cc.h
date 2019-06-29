@@ -8,6 +8,7 @@ enum {
     TK_NE,
     TK_LE,
     TK_GE,
+    TK_RETURN,
     TK_EOF,
 };
 
@@ -33,6 +34,7 @@ enum {
     ND_LT,
     ND_ASSIGN,
     ND_LVAR,
+    ND_RETURN,
 };
 
 typedef struct Node {

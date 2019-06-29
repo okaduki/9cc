@@ -59,10 +59,16 @@ void tokenize(char* p){
         if(isalpha(*p)){
             char *q = p;
             int len = 0;
-            while(p != NULL && isalnum(*p)){
+            while(p != NULL && (isalnum(*p) || *p == '_')){
                 ++len;
                 ++p;
             }
+
+            if(len == 6 && strncmp(q, "return", 6) == 0){
+                add_token(TK_RETURN, 0, q, len);
+                continue;
+            }
+
             add_token(TK_IDENT, 0, q, len);
             continue;
         }
@@ -172,16 +178,25 @@ void program(){
 }
 
 Node* stmt(){
-    Node* res = expr();
+    Node *res = NULL;
+    if(consume(TK_RETURN)){
+        res = expr();
+        if(consume(';')){
+            return new_node(ND_RETURN, res, NULL);
+        }
+    }
+    else{
+        res = expr();
 
-    if(consume(';')){
-        return res;
+        if(consume(';')){
+            return res;
+        }
     }
 
     fprintf(stderr, "; required.");
     error(get_token(pos));
 
-    return NULL;
+    return res;
 }
 
 

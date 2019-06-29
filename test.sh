@@ -100,6 +100,8 @@ try 6 \
   foo + bar;"
 try 10 "n1 = 1; n2 = 2; n3 = 3; n4 = 4; n1+n2+n3+n4;"
 
-# try 1 "(a = 2) == 2; a;"
+# return
+try 14 "a = 3; b = 5 * 6 - 8; return a + b / 2;"
+try 5 "return 5; return 8;"
 
 echo "OK"

@@ -25,6 +25,15 @@ void gen(Node* node){
         return;
     }
     
+    if(node->type == ND_RETURN){
+        gen(node->lhs);
+        printf("  pop rax \n");
+        printf("  mov rsp, rbp \n");
+        printf("  pop rbp \n");
+        printf("  ret\n");
+        return;
+    }
+
     if(node->type == ND_ASSIGN){
         gen_lval(node->lhs);
         gen(node->rhs);
