@@ -37,6 +37,15 @@ void gen(Node* node){
         return;
     }
 
+    if(node->type == ND_BLOCK){
+        for(int i=0;i<node->block->len; ++i){
+            gen((Node*)node->block->data[i]);
+            printf("  pop rax \n");
+        }
+        printf("  push 0 \n");
+        return;
+    }
+
     if(node->type == ND_IF_COND){
         if(node->rhs->type != ND_IF_STM){
             error_s("no statements in if");

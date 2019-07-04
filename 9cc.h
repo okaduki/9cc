@@ -7,6 +7,7 @@ program    = stmt*
 stmt    =
         | ";"
         | expr ";"
+        | "{" stmt* "}"
         | "if" "(" expr ")" stmt ("else" stmt)?
         | "while" "(" expr ")" stmt
         | "for" "(" expr? ";" expr? ";" expr? ")" stmt
@@ -63,22 +64,25 @@ enum {
     ND_IF_STM,
     ND_WHILE,
     ND_FOR,
+    ND_BLOCK,
     ND_EMPTY,
 };
 
-typedef struct Node {
-    int type;
-    struct Node* lhs;
-    struct Node* rhs;
-    int val;
-    int offset;
-} Node;
 
 typedef struct {
     void **data;
     int capacity;
     int len;
 } Vector;
+
+typedef struct Node {
+    int type;
+    struct Node* lhs;
+    struct Node* rhs;
+    Vector* block;
+    int val;
+    int offset;
+} Node;
 
 Vector* new_vector();
 void vec_push(Vector* vec, void *data);

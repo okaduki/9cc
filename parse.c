@@ -275,6 +275,16 @@ Node* stmt(){
 
         return new_node(ND_FOR, new_node(ND_FOR, init, cond), new_node(ND_FOR, incr, stm));
     }
+    else if(consume('{')){
+        Vector* stmts = new_vector();
+        while(!consume('}')){
+            vec_push(stmts, stmt());
+        }
+
+        Node* node = new_node(ND_BLOCK, NULL, NULL);
+        node->block = stmts;
+        return node;
+    }
     else{
         res = expr();
 

@@ -27,6 +27,14 @@ try(){
     set -e
 }
 
+# block statement
+
+try 3 "{ x = 1; x = 2; x = 3; } return x;"
+try 3 "{ { { { {} x = 1; }  x = 2; } x = 3; } return x; }"
+try 55 "sum = 0; i = 0; while (i <= 10) { sum = sum + i; i = i + 1; } return sum;"
+try 3 "a = 1; b = 2; d = 0; if ( a ) { d = d + a; d = d + b; } else { d = d + b; d = d - a; } return d;"
+try 1 "a = 1; b = 2; d = 0; if ( a-1 ) { d = d + a; d = d + b; } else { d = d + b; d = d - a; } return d;"
+
 # if statement
 
 try 1 "x = 9; if ( x == 9 ) return 1; return 0;"
