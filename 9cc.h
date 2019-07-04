@@ -65,7 +65,6 @@ enum {
     ND_WHILE,
     ND_FOR,
     ND_BLOCK,
-    ND_EMPTY,
 };
 
 

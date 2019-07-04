@@ -14,7 +14,10 @@ void gen_lval(Node* node){
 }
 
 void gen(Node* node){
-    if(!node || node->type == ND_EMPTY) return;
+    if(!node){
+        printf("  push rax\n");
+        return;
+    }
 
     if(node->type == ND_NUM){
         printf("  push %d\n", node->val);
@@ -42,7 +45,7 @@ void gen(Node* node){
             gen((Node*)node->block->data[i]);
             printf("  pop rax \n");
         }
-        printf("  push 0 \n");
+        printf("  push rax \n");
         return;
     }
 
@@ -75,8 +78,10 @@ void gen(Node* node){
             printf("  cmp rax, 0 \n");
             printf("  je .L%d \n", fi_label);
             gen(node->rhs->lhs);
+            printf("  pop rax \n");
 
             printf(".L%d: \n", fi_label);
+            printf("  push rax \n");
         }
         return;
     }
@@ -92,9 +97,11 @@ void gen(Node* node){
         printf("  je .L%d \n", end_label);
         // stmt
         gen(node->rhs);
+        printf("  pop rax \n");
         printf("  jmp .L%d \n", begin_label);
         // end
         printf(".L%d: \n", end_label);
+        printf("  push rax \n");
 
         return;
     }
@@ -114,6 +121,7 @@ void gen(Node* node){
         int end_label = label_counter++;
 
         gen(init);
+        printf("  pop rax \n");
         printf(".L%d: \n", begin_label);
         // cond
         gen(cond);
@@ -122,11 +130,14 @@ void gen(Node* node){
         printf("  je .L%d \n", end_label);
         // stmt
         gen(stm);
+        printf("  pop rax \n");
         // incr
         gen(incr);
+        printf("  pop rax \n");
         printf("  jmp .L%d \n", begin_label);
         // end
         printf(".L%d: \n", end_label);
+        printf("  push rax \n");
 
         return;
     }

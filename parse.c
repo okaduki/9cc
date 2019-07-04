@@ -195,7 +195,7 @@ void program(){
 
 Node* stmt(){
     Node *res = NULL;
-    if(consume(';')) return new_node(ND_EMPTY, NULL, NULL);
+    if(consume(';')) return NULL;
     
     if(consume(TK_RETURN)){
         res = expr();
