@@ -27,6 +27,27 @@ try(){
     set -e
 }
 
+func_test(){
+    caller="$1"
+    callee="$2"
+    expected="$3"
+    ./9cc "$(cat $caller)" > caller.s
+    cc -S $callee -o callee.s
+    gcc -o tmp caller.s callee.s
+    actual=$(./tmp)
+    
+    if [[ "$actual" != "$expected" ]]; then
+        echo "\"$expected\" expected, but got \"$actual\" in \"$caller\""
+        exit 1
+    fi
+}
+
+# call function
+
+func_test funcs/call_arg0func.c funcs/arg0func.c "called foo()"
+func_test funcs/call_arg6func.c funcs/arg6func.c "1 1 4 5 1 4 "
+exit 0
+
 # block statement
 
 try 3 "{ x = 1; x = 2; x = 3; } return x;"

@@ -414,6 +414,39 @@ Node* term(){
 
     if(get_token(pos)->type == TK_IDENT){
         Token *tok = get_token(pos++);
+        // function
+        if(consume('(')){
+            Node *node = malloc(sizeof(Node));
+            node->type = ND_FUNC;
+            node->name = malloc(sizeof(char) * (tok->len + 1));
+            strncpy(node->name, tok->input, tok->len);
+            node->name[tok->len] = '\0';
+            node->block = new_vector(); // arguments
+
+            if(!consume(')')){
+                Node *exp = expr();
+                vec_push(node->block, exp);
+
+                while(consume(',')){
+                    exp = expr();
+                    vec_push(node->block, exp);
+                }
+
+                if(!consume(')')){
+                    fprintf(stderr, "Unmatched bracket\n");
+                    error(get_token(pos));
+                }
+
+                if(node->block->len > 6){
+                    fprintf(stderr, "Too many function argument\n");
+                    error(get_token(pos));
+                }
+            }
+
+            return node;
+        }
+
+        // variable
         LVar *var = find_lvar(tok);
         if(var == NULL){
             var = malloc(sizeof(LVar));

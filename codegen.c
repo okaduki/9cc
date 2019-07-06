@@ -40,6 +40,26 @@ void gen(Node* node){
         return;
     }
 
+    if(node->type == ND_FUNC){
+        for(int i=0;i<node->block->len;++i){
+            gen((Node*)node->block->data[i]);
+        }
+        if(node->block->len >= 6) printf("  pop r9\n");
+        if(node->block->len >= 5) printf("  pop r8\n");
+        if(node->block->len >= 4) printf("  pop rcx\n");
+        if(node->block->len >= 3) printf("  pop rdx\n");
+        if(node->block->len >= 2) printf("  pop rsi\n");
+        if(node->block->len >= 1) printf("  pop rdi\n");
+
+        // https://stackoverflow.com/questions/9592345/x86-64-align-stack-and-recover-without-saving-registers
+        printf("  push rsp\n");
+        printf("  push [rsp]\n");
+        printf("  and rsp, -0x10\n");
+        printf("  call %s\n", node->name);
+        printf("  mov rsp, [rsp+8]\n");
+        return;
+    }
+
     if(node->type == ND_BLOCK){
         for(int i=0;i<node->block->len; ++i){
             gen((Node*)node->block->data[i]);

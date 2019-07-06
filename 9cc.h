@@ -19,7 +19,7 @@ relational = add ("<" add | "<=" add | ">" add | ">=" add)*
 add        = mul ("+" mul | "-" mul)*
 mul        = unary ("*" unary | "/" unary)*
 unary      = ("+" | "-")? term
-term       = num | ident | "(" expr ")"
+term       = num | ident ("(" expr? ("," expr)*  ")")? | "(" expr ")"
 
  */
 enum {
@@ -65,6 +65,7 @@ enum {
     ND_WHILE,
     ND_FOR,
     ND_BLOCK,
+    ND_FUNC,
 };
 
 
@@ -81,6 +82,7 @@ typedef struct Node {
     Vector* block;
     int val;
     int offset;
+    char *name;
 } Node;
 
 Vector* new_vector();
