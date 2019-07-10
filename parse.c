@@ -165,8 +165,22 @@ LVar *find_lvar(Token *tok){
     return NULL;
 }
 
+LVar *register_or_get_lvar(Token *tok){
+    LVar *var = find_lvar(tok);
+    if(var == NULL){
+        var = malloc(sizeof(LVar));
+        var->next = locals;
+        var->name = tok->input;
+        var->len = tok->len;
+        var->offset = (locals == NULL ? 0 : locals->offset) + 8;
+
+        locals = var;
+    }
+    return var;
+}
 
 void program();
+Node* func();
 Node* stmt();
 Node* expr();
 Node* assign();
@@ -185,12 +199,75 @@ int consume(int ty){
 }
 
 void program(){
-    Node* res = stmt();
+    Node* res = func();
     vec_push(code, res);
     if(get_token(pos)->type == TK_EOF){
         return;
     }
     program();
+}
+
+Node *func(){
+    if(get_token(pos)->type != TK_IDENT){
+        fprintf(stderr, "Top level should be function declaration.\n");
+        error(get_token(pos));
+    }
+
+    Token* tok = get_token(pos++);
+    if(!consume('(')){
+        fprintf(stderr, "Function declaration without \"(\".\n");
+        error(get_token(pos));
+    }
+
+    Node *node = malloc(sizeof(Node));
+    node->type = ND_DECL_FUNC;
+    node->name = malloc(sizeof(char) * (tok->len + 1));
+    strncpy(node->name, tok->input, tok->len);
+    node->name[tok->len] = '\0';
+    node->block = new_vector();
+
+    if(!consume(')')){
+        tok = get_token(pos++);
+        if(tok->type != TK_IDENT){
+            fprintf(stderr, "Argument should be ident.\n");
+            error(get_token(pos));
+        }
+
+        Node *args = malloc(sizeof(Node));
+        args->type = ND_DECL_FUNC;
+        args->block = new_vector();
+
+        LVar *var = register_or_get_lvar(tok);
+        vec_push(args->block, new_node_ident(var->offset));
+
+        while(consume(',')){
+            tok = get_token(pos++);
+            if(tok->type != TK_IDENT){
+                fprintf(stderr, "Argument should be ident.\n");
+                error(get_token(pos));
+            }
+            
+            var = register_or_get_lvar(tok);
+            vec_push(args->block, new_node_ident(var->offset));
+        }
+        
+        if(!consume(')')){
+            fprintf(stderr, "Function declaration without \")\".\n");
+            error(get_token(pos));
+        }
+
+        node->lhs = args;
+    }
+    if(!consume('{')){
+        fprintf(stderr, "Function declaration without \"{\".\n");
+        error(get_token(pos));
+    }
+
+    while(!consume('}')){
+        vec_push(node->block, stmt());
+    }
+
+    return node;
 }
 
 Node* stmt(){
@@ -447,16 +524,7 @@ Node* term(){
         }
 
         // variable
-        LVar *var = find_lvar(tok);
-        if(var == NULL){
-            var = malloc(sizeof(LVar));
-            var->next = locals;
-            var->name = tok->input;
-            var->len = tok->len;
-            var->offset = (locals == NULL ? 0 : locals->offset) + 8;
-
-            locals = var;
-        }
+        LVar *var = register_or_get_lvar(tok);
         return new_node_ident(var->offset);
     }
 

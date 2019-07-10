@@ -67,22 +67,11 @@ int main(int argc, char **argv){
     program();
 
     printf(".intel_syntax noprefix\n");
+
     printf(".global main\n");
-    printf("main:\n");
-
-    printf("  push rbp\n");
-    printf("  mov rbp, rsp\n");
-    printf("  sub rsp, %d\n", 26 * 8);
-
     for(int i=0;i<code->len;++i){
         gen((Node*)code->data[i]);
-        printf("  pop rax\n");
     }
-
-    
-    printf("  mov rsp, rbp\n");
-    printf("  pop rbp\n");
-    printf("  ret\n");
 
     return 0;
 }

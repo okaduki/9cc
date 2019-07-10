@@ -3,7 +3,8 @@
 
 /*
 
-program    = stmt*
+program    = func*
+func = ident "(" (ident ("," ident)*)? ")" "{" stmt* "}"
 stmt    =
         | ";"
         | expr ";"
@@ -66,6 +67,7 @@ enum {
     ND_FOR,
     ND_BLOCK,
     ND_FUNC,
+    ND_DECL_FUNC,
 };
 
 

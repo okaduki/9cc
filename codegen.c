@@ -40,6 +40,63 @@ void gen(Node* node){
         return;
     }
 
+    if(node->type == ND_DECL_FUNC){
+        printf("%s:\n", node->name);
+        printf("  push rbp\n");
+        printf("  mov rbp, rsp\n");
+        printf("  sub rsp, %d\n", 26 * 8);
+
+        if(node->lhs){ // has argument
+            Node *arg = node->lhs;
+
+            if(arg->block->len >= 6){ // r9
+                gen_lval((Node*)arg->block->data[5]);
+                printf("  pop rax\n");
+                printf("  mov [rax], r9\n");
+            }
+
+            if(arg->block->len >= 5){ // r8
+                gen_lval((Node*)arg->block->data[4]);
+                printf("  pop rax\n");
+                printf("  mov [rax], r8\n");
+            }
+
+            if(arg->block->len >= 4){ // rcx
+                gen_lval((Node*)arg->block->data[3]);
+                printf("  pop rax\n");
+                printf("  mov [rax], rcx\n");
+            }
+
+            if(arg->block->len >= 3){ // rdx
+                gen_lval((Node*)arg->block->data[2]);
+                printf("  pop rax\n");
+                printf("  mov [rax], rdx\n");
+            }
+
+            if(arg->block->len >= 2){ // rsi
+                gen_lval((Node*)arg->block->data[1]);
+                printf("  pop rax\n");
+                printf("  mov [rax], rsi\n");
+            }
+
+            if(arg->block->len >= 1){ // rdi
+                gen_lval((Node*)arg->block->data[0]);
+                printf("  pop rax\n");
+                printf("  mov [rax], rdi\n");
+            }
+        }
+
+        for(int i=0;i<node->block->len;++i){
+            gen((Node*)node->block->data[i]);
+            printf("  pop rax\n");
+        }
+
+        printf("  mov rsp, rbp\n");
+        printf("  pop rbp\n");
+        printf("  ret\n");
+        return;
+    }
+
     if(node->type == ND_FUNC){
         for(int i=0;i<node->block->len;++i){
             gen((Node*)node->block->data[i]);
@@ -57,6 +114,7 @@ void gen(Node* node){
         printf("  and rsp, -0x10\n");
         printf("  call %s\n", node->name);
         printf("  mov rsp, [rsp+8]\n");
+        printf("  push rax\n");
         return;
     }
 

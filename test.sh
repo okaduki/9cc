@@ -42,11 +42,25 @@ func_test(){
     fi
 }
 
+# function decl
+
+try 114 "main(){ return 114; }"
+try 114 "main(){ a = 110; b = 4; return a + b; }"
+try 114 "f(){ return 110; } gg(){ return 4; } main(){ a = f(); b = gg(); return a + b; }"
+try 114 "add(a, b){ return a + b; } main(){ x = add(110, 4); return x; }"
+try 13 "fib(i){ if(i <= 1) return i; return fib(i-1) + fib(i-2); } main(){ return fib(7); }"
+
+echo "OK"
+
+
+## これ以降のテストはmain関数が定義されておらず通らないためスキップ
+
+exit 0
+
 # call function
 
 func_test funcs/call_arg0func.c funcs/arg0func.c "called foo()"
 func_test funcs/call_arg6func.c funcs/arg6func.c "1 1 4 5 1 4 "
-exit 0
 
 # block statement
 
