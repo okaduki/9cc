@@ -19,7 +19,7 @@ equality   = relational ("==" relational | "!=" relational)*
 relational = add ("<" add | "<=" add | ">" add | ">=" add)*
 add        = mul ("+" mul | "-" mul)*
 mul        = unary ("*" unary | "/" unary)*
-unary      = ("+" | "-")? term
+unary      = ("+" | "-")? term | "*" unary | "&" unary
 term       = num | ident ("(" expr? ("," expr)*  ")")? | "(" expr ")"
 
  */

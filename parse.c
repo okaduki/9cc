@@ -480,6 +480,14 @@ Node* unary(){
         Node* res = term();
         return new_node('-', new_node_num(0), res);
     }
+    else if(consume('*')){
+        Node* res = unary();
+        return new_node('*', res, NULL);
+    }
+    else if(consume('&')){
+        Node* res = unary();
+        return new_node('&', res, NULL);
+    }
 
     return term();
 }

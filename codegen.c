@@ -230,6 +230,19 @@ void gen(Node* node){
         return;
     }
 
+    if(node->type == '&' && node->rhs == NULL){
+        gen_lval(node->lhs);
+        return;
+    }
+
+    if(node->type == '*' && node->rhs == NULL){
+        gen(node->lhs);
+        printf("  pop rax\n");
+        printf("  mov rax, [rax]\n");
+        printf("  push rax\n");
+        return;
+    }
+
     if(!node->lhs || !node->rhs){
         error_s("operand argument error");
     }

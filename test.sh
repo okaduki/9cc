@@ -42,6 +42,11 @@ func_test(){
     fi
 }
 
+# unary * and &
+
+try 114 "main(){ x = 114; y = &x; return *y;}"
+try 1 "main(){ x = 1; y = 4; z = &y + 8; return *z;}"
+
 # function decl
 
 try 114 "main(){ return 114; }"
