@@ -27,6 +27,20 @@ try(){
     set -e
 }
 
+check_fail(){
+    set +e
+    input="$1"
+
+    ./9cc "$input" > /dev/null 2>&1
+
+    if [[ $? == 0 ]]; then
+        echo " compilation should be failed: $input"
+        exit 1
+    fi
+
+    set -e
+}
+
 func_test(){
     caller="$1"
     callee="$2"
@@ -42,18 +56,28 @@ func_test(){
     fi
 }
 
+# should be error.
+check_fail "int main(){ x = 0; return x; }"
+
+# type declaration
+
+try 1 "int f(int x){ x = 100; return x;} int main(){ int x; x = 1; f(x); return x;}"
+
+# This test fail in current implement.
+# check_fail "int f(int x){ x = 100; return x;} int main(){ x = 1; f(x); return x;}"
+
 # unary * and &
 
-try 114 "main(){ x = 114; y = &x; return *y;}"
-try 1 "main(){ x = 1; y = 4; z = &y + 8; return *z;}"
+try 114 "int main(){ int x; int y; x = 114; y = &x; return *y;}"
+try 1 "int main(){ int x; int y; int z; x = 1; y = 4; z = &y + 8; return *z;}"
 
 # function decl
 
-try 114 "main(){ return 114; }"
-try 114 "main(){ a = 110; b = 4; return a + b; }"
-try 114 "f(){ return 110; } gg(){ return 4; } main(){ a = f(); b = gg(); return a + b; }"
-try 114 "add(a, b){ return a + b; } main(){ x = add(110, 4); return x; }"
-try 13 "fib(i){ if(i <= 1) return i; return fib(i-1) + fib(i-2); } main(){ return fib(7); }"
+try 114 "int main(){ return 114; }"
+try 114 "int main(){ int a; a = 110; int b; b = 4; return a + b; }"
+try 114 "int f(){ return 110; } int gg(){ return 4; } int main(){ int a; int b; a = f(); b = gg(); return a + b; }"
+try 114 "int add(int a, int b){ return a + b; } int main(){ int x; x = add(110, 4); return x; }"
+try 13 "int fib(int i){ if(i <= 1) return i; return fib(i-1) + fib(i-2); } int main(){ return fib(7); }"
 
 echo "OK"
 

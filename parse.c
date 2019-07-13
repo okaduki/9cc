@@ -84,6 +84,10 @@ void tokenize(char* p){
                 add_token(TK_FOR, 0, q, len);
                 continue;
             }
+            if(len == 3 && strncmp(q, "int", len) == 0){
+                add_token(TK_TYPE, 0, q, len);
+                continue;
+            }
 
             add_token(TK_IDENT, 0, q, len);
             continue;
@@ -208,6 +212,11 @@ void program(){
 }
 
 Node *func(){
+    if(!consume(TK_TYPE)){
+        fprintf(stderr, "Type missing.\n");
+        error(get_token(pos));
+    }
+
     if(get_token(pos)->type != TK_IDENT){
         fprintf(stderr, "Top level should be function declaration.\n");
         error(get_token(pos));
@@ -227,6 +236,11 @@ Node *func(){
     node->block = new_vector();
 
     if(!consume(')')){
+        if(!consume(TK_TYPE)){
+            fprintf(stderr, "Type missing.\n");
+            error(get_token(pos));
+        }
+
         tok = get_token(pos++);
         if(tok->type != TK_IDENT){
             fprintf(stderr, "Argument should be ident.\n");
@@ -241,6 +255,11 @@ Node *func(){
         vec_push(args->block, new_node_ident(var->offset));
 
         while(consume(',')){
+            if(!consume(TK_TYPE)){
+                fprintf(stderr, "Type missing.\n");
+                error(get_token(pos));
+            }
+
             tok = get_token(pos++);
             if(tok->type != TK_IDENT){
                 fprintf(stderr, "Argument should be ident.\n");
@@ -361,6 +380,20 @@ Node* stmt(){
         Node* node = new_node(ND_BLOCK, NULL, NULL);
         node->block = stmts;
         return node;
+    }
+    else if(consume(TK_TYPE)){
+        Token *tok = get_token(pos++);
+        if(tok->type != TK_IDENT){
+            fprintf(stderr, "Invalid declaration.\n");
+            error(get_token(pos));
+        }
+        
+        LVar *var = register_or_get_lvar(tok);
+        Node *res = new_node(ND_DECL_VAR, new_node_ident(var->offset), NULL);
+
+        if(consume(';')){
+            return res;
+        }
     }
     else{
         res = expr();
@@ -532,7 +565,11 @@ Node* term(){
         }
 
         // variable
-        LVar *var = register_or_get_lvar(tok);
+        LVar *var = find_lvar(tok);
+        if(var == NULL){
+            fprintf(stderr, "Undefined variable: %.*s\n", tok->len, tok->input);
+            error(get_token(pos));
+        }
         return new_node_ident(var->offset);
     }
 

@@ -30,6 +30,10 @@ void gen(Node* node){
         printf("  push rax\n");
         return;
     }
+    if(node->type == ND_DECL_VAR){
+        printf("  push rax\n");
+        return;
+    }
     
     if(node->type == ND_RETURN){
         gen(node->lhs);

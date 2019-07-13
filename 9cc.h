@@ -4,10 +4,12 @@
 /*
 
 program    = func*
-func = ident "(" (ident ("," ident)*)? ")" "{" stmt* "}"
+func = type ident "(" (type ident ("," type ident)*)? ")" "{" stmt* "}"
+type = "int"
 stmt    =
         | ";"
         | expr ";"
+        | type ident ";"
         | "{" stmt* "}"
         | "if" "(" expr ")" stmt ("else" stmt)?
         | "while" "(" expr ")" stmt
@@ -21,11 +23,13 @@ add        = mul ("+" mul | "-" mul)*
 mul        = unary ("*" unary | "/" unary)*
 unary      = ("+" | "-")? term | "*" unary | "&" unary
 term       = num | ident ("(" expr? ("," expr)*  ")")? | "(" expr ")"
+ident      = alphabet (alphabet | num)*
 
  */
 enum {
     TK_NUM = 256,
     TK_IDENT,
+    TK_TYPE,
     TK_EQ,
     TK_NE,
     TK_LE,
@@ -68,6 +72,7 @@ enum {
     ND_BLOCK,
     ND_FUNC,
     ND_DECL_FUNC,
+    ND_DECL_VAR,
 };
 
 
